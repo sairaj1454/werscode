@@ -1,0 +1,164 @@
+<!doctype html>
+<html>
+<head>
+    <title>WERS Code Extractor - Results</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .container {
+            margin-top: 20px;
+        }
+        .voci-only {
+            color: red;
+        }
+        .common-voci-doc {
+            color: green;
+        }
+        .doc2 {
+            color: blue;
+        }
+        .doc1 {
+            color: orange;
+        }
+        .doc1-doc2 {
+            color: purple;
+        }
+        .filter-section {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="#">WERS Code Extractor</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">Home</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 class="my-4">Processing Results</h1>
+        <p><a href="{{ file_txt_url }}" class="btn btn-secondary">Download the text file</a></p>
+
+        {% if time_metrics %}
+        <div class="card mb-4">
+            <div class="card-header text-white" style="background-color: #17a2b8;">
+                <h5 class="mb-0">CFD Completion Time Estimate (WERS Codes Only)</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="row m-0">
+                    <div class="col-md-3 text-center py-3">
+                        <h2 class="font-weight-bold">{{ time_metrics.total_codes }}</h2>
+                        <p class="mb-0">Total WERS Codes<br><small>(e)</small></p>
+                    </div>
+                    <div class="col-md-3 text-center py-3">
+                        <h2 class="font-weight-bold">{{ time_metrics.total_minutes }}</h2>
+                        <p class="mb-0">Total Minutes<br><small>(4 mins per code)</small></p>
+                    </div>
+                    <div class="col-md-3 text-center py-3">
+                        <h2 class="font-weight-bold">{{ time_metrics.total_hours }}</h2>
+                        <p class="mb-0">Total Hours</p>
+                    </div>
+                    <div class="col-md-3 text-center py-3">
+                        <h2 class="font-weight-bold">{{ time_metrics.total_days }}</h2>
+                        <p class="mb-0">Total Working Days</p>
+                    </div>
+                </div>
+                <div class="row m-0 bg-light">
+                    <div class="col-12 text-center py-2">
+                        <p class="mb-0"><strong>Note:</strong> Total includes 1 day buffer for Entity/MPV$ codes</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="filter-section">
+            <h4>Filter Results</h4>
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-primary filter-btn active" data-filter="all">All</button>
+                <button type="button" class="btn btn-outline-primary filter-btn" data-filter="VOCI Only">VOCI Only</button>
+                <button type="button" class="btn btn-outline-primary filter-btn" data-filter="WERS Document 1 Only">WERS Doc 1</button>
+                <button type="button" class="btn btn-outline-primary filter-btn" data-filter="WERS Document 2 Only">WERS Doc 2</button>
+                <button type="button" class="btn btn-outline-primary filter-btn" data-filter="Both">Both VOCI & WERS</button>
+            </div>
+        </div>
+
+        <h2 class="my-4">Results</h2>
+        {% if code_results %}
+            <div class="results">
+                <table class="table table-striped" id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th>S.No.</th>
+                            <th>Code</th>
+                            <th>Description</th>
+                            <th>Source</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for code, result in code_results %}
+                        <tr data-category="{{ result.source }}">
+                            <td>{{ loop.index }}</td>
+                            <td class="{% if result.source == 'VOCI Only' %}voci-only{% elif result.source == 'Both VOCI and WERS Document 1' %}common-voci-doc{% elif result.source == 'Both VOCI and WERS Document 2' %}common-voci-doc{% elif result.source == 'WERS Document 1 Only' %}doc1{% elif result.source == 'WERS Document 2 Only' %}doc2{% elif result.source == 'Both VOCI and WERS Document 1 and 2' %}common-voci-doc{% endif %}">
+                                {{ code }}
+                            </td>
+                            <td>{{ result.description }}</td>
+                            <td>{{ result.source }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p>No codes found.</p>
+        {% endif %}
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('.filter-btn').click(function() {
+                // Remove active class from all buttons
+                $('.filter-btn').removeClass('active');
+                // Add active class to clicked button
+                $(this).addClass('active');
+
+                const filter = $(this).data('filter');
+                const rows = $('#resultsTable tbody tr');
+                let visibleIndex = 1;
+
+                rows.each(function() {
+                    const category = $(this).data('category');
+                    if (filter === 'all') {
+                        $(this).show();
+                        $(this).find('td:first').text(visibleIndex++);
+                    } else if (filter === 'Both') {
+                        if (category.includes('Both VOCI and WERS')) {
+                            $(this).show();
+                            $(this).find('td:first').text(visibleIndex++);
+                        } else {
+                            $(this).hide();
+                        }
+                    } else {
+                        if (category === filter) {
+                            $(this).show();
+                            $(this).find('td:first').text(visibleIndex++);
+                        } else {
+                            $(this).hide();
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

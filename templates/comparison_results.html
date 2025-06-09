@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Comparison Results</title>
+    <style>
+        table {
+            width: 50%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Comparison Results</h1>
+
+    {% if common_codes %}
+        <table>
+            <tr>
+                <th>S.No</th>
+                <th>Code Found</th>
+            </tr>
+            {% for code in common_codes %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ code }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>No matching codes found in the document.</p>
+    {% endif %}
+
+</body>
+</html>
